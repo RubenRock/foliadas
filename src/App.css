@@ -1,20 +1,29 @@
+html{
+  margin: 0px;
+}
+
+@font-face {
+  font-family: 'Aclonica';
+  src: local('Aclonica'), url(./fonts/Aclonica-Regular.ttf) format('truetype');
+}
+
 .App {
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.carga_inicio{ 
+  width: 100px;
+  height: 100px; 
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+  .carga_inicio{
+    animation: logo-spin infinite 5s linear;
   }
 }
 
 .App-header {
-  background-color: #282c34;
+  /* background-color: #282c34; */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -28,11 +37,167 @@
   color: #61dafb;
 }
 
-@keyframes App-logo-spin {
+@keyframes logo-spin {
   from {
     transform: rotate(0deg);
   }
   to {
     transform: rotate(360deg);
   }
+}
+
+.logo-GASM{
+ 
+  width: 150px;
+  height: 150px;
+  left: 26px;
+  top: 15px;  
+}
+
+.logo-home{  
+  width: 180px;
+  height: 180px;    
+}
+
+.logo-report{  
+  width: 250px;
+  height: 190px;    
+}
+
+.texto_inicio{
+  font-family: Aclonica;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 32px;
+  color: #6C63FF;
+}
+
+.texto_cabecera{
+  font-family: Aclonica;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 76px;
+  color: rgba(6, 4, 31, 0.81);
+  margin-top: -60px;
+  margin-left: 208px;
+  margin-bottom: 0px;
+}
+
+.seccion_calculos{
+  display: flex;
+  flex-direction: column;
+  margin-left: 150px;
+}
+
+.fila{
+  display: flex;
+  flex-direction: row; 
+}
+
+.columna{
+  display: flex;
+  flex-direction: column; 
+  justify-content: space-around;
+}
+
+.borde{
+  border:red 5px solid;  
+}
+
+.caja_texto{
+  width: 400px;
+  height: 30px; 
+  background: #FFFFFF;
+  border: 1px solid #8D9EC9;
+  box-sizing: border-box;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;  
+  font-family: Aclonica;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 18px;
+  color: #6C63FF;
+}
+
+.caja_texto_tienda{
+  width: 400px;
+  height: 45px; 
+  background: #FFFFFF;
+  border: 1px solid #8D9EC9;
+  box-sizing: border-box;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 14px;  
+  font-family: Aclonica;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 22px;
+  color: #6C63FF;
+  margin-bottom: 10px;
+}
+
+.mandar_abajo{
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 30px;
+  margin-left: 20px;
+}
+
+.centrar_imagen{
+  display: flex;
+}
+
+.boton{
+  font-family: Aclonica;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 21px;
+  width: 127px;
+  height: 41px;
+  background: #6C63FF;
+  border-radius: 20px;
+  color: white;
+  margin-left: 738px;
+  box-shadow: 0px 4px 4px rgb(0 0 0 / 25%);  
+  /* border: rgb(100, 98, 98) 1px solid; */
+}
+
+.lista_remision_folio{
+  width: 24px;
+  display: flex;
+  justify-content: flex-end;
+  margin-right: 5px;
+}
+
+.lista_remision_cliente{
+  width: 170px;  
+  margin-right: 5px;
+}
+
+.lista_remision_total{
+  width: 100px;    
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lista_remision_fecha{
+  width: 100px;  
+  margin-right: 5px;
+}
+
+.remisiones_cantidad{
+  width: 24px;
+  display: flex;
+  justify-content: flex-end;
+  margin-right: 5px;
+}
+
+.remisiones_producto{
+  width: 380px; 
+}
+
+.remisiones_total{
+  width: 400px;    
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -18px;
 }
