@@ -17,6 +17,22 @@ function App() {
       leerDatos()
   },[])
 
+  const cabecera_matriz = (fecha,folio) =>{
+    return(
+      <div className='encabezados'>
+        <p>GRUPO ABARROTERO SAN MARTIN SA DE CV</p>
+        <p>RFC: GAS-020807-TG0</p>
+        <p>AV. CENTRAL SUR NUM. 25</p>
+        <p>TEL: 963-63-6-02-23</p>
+        <p>LAS MARGARITAS, CHIAPAS</p>
+        <p>CONDICION:            CONTADO</p>
+        <p>MOSTRADOR</p>
+        <p>{fecha}</p> 
+        <p>{folio}</p>
+      </div>
+    )
+  }
+
   const leerDatos = async () =>{
     setEmpaques([])  
     let response = await fetch('https://vercel-api-eta.vercel.app/api/inventario' )        
@@ -33,6 +49,7 @@ function App() {
     let resul=
               <>
                 {listaRemision_Creada.map((item, index) =>  <div key={index}>
+                                                    {cabecera_matriz(item.fecha,item.folio)}
                                                     <div style={{display:'none'}}> {/* muestra en pantalla los acumuladores */}
                                                         { iva += item.tasas.tasa16}
                                                         { ieps += item.tasas.tasa8 }
@@ -41,16 +58,14 @@ function App() {
                                                     <div className='fila'>
                                                         <p className='lista_remision_folio'> {item.folio} </p>
                                                         <p className='lista_remision_cliente'> {item.cliente} </p>
-                                                        <p className='lista_remision_fecha'> {item.fecha} </p> 
-                                                        <p className='lista_remision_total'>$ {item.total.toFixed(2)} </p> 
-                                                        
+                                                        <p className='lista_remision_fecha'> {item.fecha} </p>                                                         
                                                     </div>
                                                     <div>
                                                         <hr></hr>
                                                         {remisiones_Creadas.map((item2, index2) =>
                                                             (item2.folio === item.folio) ?
                                                                 <div key={index2}>
-                                                                    <div className='fila' style={{marginTop:'-18px'}}>
+                                                                    <div className='fila' >
                                                                         <p className='remisiones_cantidad'> {item2.cantidad} </p>
                                                                         <p className='remisiones_producto'> {item2.empaque} {item2.producto} </p>                                                                        
                                                                     </div>
@@ -60,6 +75,7 @@ function App() {
                                                                 null
                                                               )}
                                                         <hr></hr>
+                                                        <p className='lista_remision_total'>$ {item.total.toFixed(2)} </p> 
                                                     </div>
                                                 </div>)
                 }
