@@ -1,5 +1,6 @@
 p,html{
   margin: 0px;
+  font-size: 12px;
 }
 
 @font-face {
@@ -23,7 +24,6 @@ p,html{
 }
 
 .encabezados{
-  width: 500px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -74,6 +74,7 @@ p,html{
 }
 
 .texto_inicio{
+  margin-top: 25px;
   font-family: Aclonica;
   font-style: normal;
   font-weight: normal;
@@ -171,7 +172,6 @@ p,html{
 }
 
 .lista_remision_folio{
-  width: 24px;
   display: flex;
   justify-content: flex-end;
   margin-right: 5px;
@@ -179,7 +179,7 @@ p,html{
 
 .lista_remision_cliente{
   width: 170px;  
-  margin-right: 5px;
+  margin-left: 15px;
 }
 
 .lista_remision_total{
@@ -204,8 +204,7 @@ p,html{
   width: 380px; 
 }
 
-.remisiones_total{
-  width: 400px;    
+.remisiones_total{    
   display: flex;
   justify-content: flex-end;
   
