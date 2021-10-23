@@ -2,7 +2,9 @@ import {useEffect, useState} from 'react'
 import logoGASM from './img/Logo_GASM.JPG'
 import home_img from './img/home.svg'
 import report_img from './img/report.svg'
-import * as ObtenerNotas from './obtenerNotas'
+import * as ObtenerNotas from './components/obtenerNotas'
+import * as Sqlite from './components/sqlite'
+
 import './App.css';
 
 function App() {
@@ -12,23 +14,41 @@ function App() {
   const [listaRemision_Creada, setlistaRemision_Creada] = useState([])
   const [remisiones_Creadas, setRemisiones_Creadas] = useState([])  
   const [imprimir, setImprimir] = useState(false)
-  
+  const [folio, setFolio] = useState(0)
   
   useEffect(() =>{
       leerDatos()
+   
   },[])
 
-  const ventana_impresion= () =>{
-    setImprimir(true)
-    //window.print()
-
+  const regresar = () => {
+    setlistaRemision_Creada([])
+    setRemisiones_Creadas([])
+    setImprimir(false)
   }
 
+  const leerFolio = async(tienda)=>{    
+    setFolio(await Sqlite.folioMax(tienda))    
+  }   
+
+  const guardarFoliadas = () =>{        
+   
+      setImprimir(true)
+      Sqlite.crearTablas()
+      Sqlite.insertarDatos(listaRemision_Creada,remisiones_Creadas)
+    
+      //Sqlite.borrarTablas()
+  }
+
+  const convertirAPesos = (cantidad) =>{
+    let pesos = cantidad    
+    return(pesos.toLocaleString('es-MX', {style: 'currency',currency: 'MXN', minimumFractionDigits: 2}))
+  }
 
   const cabecera_matriz = (ancho_pantalla) =>{
     return(
       <div className='encabezados'>
-        <p style={{fontWeight:'bold'}}>GRUPO ABARROTERO SAN MARTIN SA DE CV</p>
+        <p style={{fontWeight:'bold',textAlign:'center',fontSize:'11px'}}>GRUPO ABARROTERO SAN MARTIN SA DE CV</p>
         <p>RFC: GAS-020807-TG0</p>
         <p>AV. CENTRAL SUR NUM. 25</p>
         <p>TEL: 963-63-6-02-23</p>
@@ -44,7 +64,7 @@ function App() {
   const cabecera_mercado = (ancho_pantalla) =>{
     return(
       <div className='encabezados'>
-        <p style={{fontWeight:'bold'}}>CARLOS ARTURO ARGUELLO GORDILLO</p>
+        <p style={{fontWeight:'bold',textAlign:'center',fontSize:'13px'}}>CARLOS ARTURO ARGUELLO GORDILLO</p>
         <p> GRUPO ABARROTERO SAN MARTIN </p>
         <p> SUCURSAL "MERCADO" </p>
         <p>RFC: AUGC-940427-UB1</p>
@@ -62,7 +82,7 @@ function App() {
   const cabecera_lorena = (ancho_pantalla) =>{
     return(
       <div className='encabezados'>
-        <p style={{fontWeight:'bold'}}>LUZ LORENA ARGUELLO GORDILLO</p>
+        <p style={{fontWeight:'bold',textAlign:'center',fontSize:'14px'}}>LUZ LORENA ARGUELLO GORDILLO</p>
         <p> GRUPO ABARROTERO SAN MARTIN </p>
         <p> SUCURSAL "LORENA" </p>
         <p>RFC: AUGL-891102-6T2</p>
@@ -94,14 +114,24 @@ function App() {
                         <input type="date"  className='caja_texto_tienda' style={{width: '220px'}}
                           onChange={(e) => setDatosCapturados({...datosCapturados,'fecha':e.target.value})}/>
                       </div>
+                      
                       <select className='caja_texto_tienda' placeholder='Tienda' type="search" 
-                        onChange={(e) => setDatosCapturados({...datosCapturados,'tienda':e.target.value})} 
+                        onChange={(e) => {
+                          setDatosCapturados({...datosCapturados,'tienda':e.target.value})
+                          leerFolio(e.target.value)
+                        }}
                       >
                         <option value="nada">Seleccione la tienda</option>
                         <option value="matriz">Matriz</option>
                         <option value="mercado">Mercado</option>
                         <option value="lorena">Lorena</option>
                       </select>
+
+                      <div className='fila' style={{alignItems:'center'}}>
+                        <input className='caja_texto_tienda' style={{width: '120px'}} value ={folio} onChange={e => setFolio(e.target.value)}/>
+                        <p className='texto'>ultimo folio</p>
+                      </div>
+                      
                     </div>
                   </div>
               </div>
@@ -161,15 +191,19 @@ function App() {
 
   const mostrarListaRemisiones = () =>{
     let total=0, iva = 0, ieps = 0
-    let ancho_pantalla = '245px', letra_chica = '10px'
+    let ancho_pantalla = '245px', letra_chica = '13px'
     let resul=
+    <>
+                            
+            <button className='boton' 
+              onClick={() => regresar()} 
+              onMouseEnter={(e) => changeBack(e)}
+              onMouseLeave={(e) => changeBack(e)}                  
+            >regresar</button>                     
+            
+
             <div style={{width:ancho_pantalla}}> {/* ancho de la hoja de impresion */}
-                {listaRemision_Creada.map((item, index) =>  <div key={index}>
-                                                    <div style={{display:'none'}}> {/* muestra en pantalla los acumuladores */}
-                                                        
-                                                        
-                                                        
-                                                    </div>
+                {listaRemision_Creada.map((item, index) =>  <div key={index}>                                                  
                                                     
                                                     <div style={{display:'none'}}> {/* muestra en pantalla los acumuladores */}
                                                         { iva += item.tasas.tasa16}
@@ -224,27 +258,26 @@ function App() {
                                                         </div>
 
                                                         <div>
-                                                          <p style={{textAlign:'center'}}>GRACIAS POR SU COMPRA</p>
+                                                          <p style={{textAlign:'center',marginBottom:'50px'}}>GRACIAS POR SU COMPRA</p>
                                                         </div>
                                                         
                                                     </div>
                                                 </div>)
                 }
-                <p>total: {total}   - tasa0: {(total-iva-ieps)} - iva: {iva} - ieps: {ieps}</p>                              
-                <div>
-                <button className='boton' 
-                  onClick={() => ventana_impresion()} 
-                  onMouseEnter={(e) => changeBack(e)}
-                  onMouseLeave={(e) => changeBack(e)}                  
-                >imprimir</button>
-                <button className='boton' 
-                  onClick={() => setImprimir(false)} 
-                  onMouseEnter={(e) => changeBack(e)}
-                  onMouseLeave={(e) => changeBack(e)}                  
-                >regresar</button>
-            </div>
-      </div>
-    return(resul)                                          
+                 <p>.</p> 
+                <div>                 
+                  <button className='boton' 
+                    onClick={() => regresar()} 
+                    onMouseEnter={(e) => changeBack(e)}
+                    onMouseLeave={(e) => changeBack(e)}                  
+                  >regresar</button>                     
+                </div>
+      </div>      
+    </>
+    
+    //necesito regresar las notas creadas en resul
+    //y el desglose de los totales en totalm iva e ipes porque useState renderiza muchas veces y no funciono
+    return({resul:resul,total:total, iva:iva, ieps:ieps})                                          
   }
 
   const obtenerDatos = () =>{
@@ -282,7 +315,7 @@ function App() {
       alert(error)
     else //despues de validar la informacion hacemos los calculos
       {
-          const {listaRemisiones, remisiones} =ObtenerNotas.obtenerNotas(datosCapturados,productos,empaques)
+          const {listaRemisiones, remisiones} =ObtenerNotas.obtenerNotas(datosCapturados,productos,empaques,folio)          
           setlistaRemision_Creada(listaRemisiones)
           setRemisiones_Creadas(remisiones)
       }
@@ -308,14 +341,45 @@ function App() {
           </div>
         :
           <>
-                      
-            { !imprimir ? pantalla_principal : null }
+            {/* para imprimir quito la pantalla principal */}           
+            { !imprimir ? 
+                pantalla_principal 
+              :               
+                mostrarListaRemisiones().resul 
+            }
 
-            {mostrarListaRemisiones()}
+            {/* el boton de imprimir aparece si hay remisiones creadas */}
+            {listaRemision_Creada.length && !imprimir ?
+            <>
+                {/* informacion de las notas */}
+                <div style={{lineHeight:'5px'}}>
+                    <p className='texto_inicio' style={{fontSize:'20px',color:'rgba(6, 4, 31, 0.81)'}}>Numero de notas: {listaRemision_Creada.length} </p>
+                    <p className='texto_inicio' style={{fontSize:'20px',color:'rgba(6, 4, 31, 0.81)'}}>total: {convertirAPesos(mostrarListaRemisiones().total)} </p>
+                    <p className='texto_inicio' style={{fontSize:'20px',color:'rgba(6, 4, 31, 0.81)'}}>tasa0: {convertirAPesos((mostrarListaRemisiones().total-mostrarListaRemisiones().iva-mostrarListaRemisiones().ieps))} - iva: {convertirAPesos(mostrarListaRemisiones().iva)} - ieps: {convertirAPesos(mostrarListaRemisiones().ieps)}</p> 
+                </div>
+                
 
+                <button className='boton' 
+                  onClick={() => guardarFoliadas()} 
+                  onMouseEnter={(e) => changeBack(e)}
+                  onMouseLeave={(e) => changeBack(e)}                  
+                >imprimir</button>
+                
+            </>
+            :
+                null
+            }
+            
+         {/*    {<button className='boton' 
+                  onClick={() => Sqlite.borrarTablas()} 
+                  onMouseEnter={(e) => changeBack(e)}
+                  onMouseLeave={(e) => changeBack(e)}                  
+                >borrar tablas</button>
+            } */}
             
         </>
-
+  
+   
                     
         
         

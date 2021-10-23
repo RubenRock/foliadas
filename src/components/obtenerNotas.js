@@ -13,7 +13,7 @@ function ObtenerProductos (total, productos, empaques,tasa,total_por_nota, exced
             let empaquefiltrado = (empaques.filter(x => x.clave ===productos[id_producto].clave ) )//filtro los empaque del producto
             let id_empaque = Math.floor(Math.random() * empaquefiltrado.length); //elijo al azar un empaque
             
-            let cantidad = Math.floor(Math.random() * 3+1); //elijo una cantidad al azar del 1 al 3 sin el 0    
+            let cantidad = Math.floor(Math.random() * 10+1); //elijo una cantidad al azar del 1 al 3 sin el 0    
 
             total_linea = cantidad*empaquefiltrado[id_empaque].precio
         
@@ -36,100 +36,100 @@ function ObtenerProductos (total, productos, empaques,tasa,total_por_nota, exced
     return {resul,sumaAcumulada}
 }
 
-const insertarProductos = (productos,total_por_nota,folio) =>{
- 
-    let sumaAcumulada = 0, cont= 0
+const crearRemisiones = (productos,total_por_nota,folio, tienda) =>{
+    console.log(tienda)
+    let sumaAcumulada = 0, cont= 1
     let resul = []    
     
     productos.map(item => {
         if (total_por_nota < sumaAcumulada) {
             cont++
             sumaAcumulada = 0
-
         }
         sumaAcumulada += item.total
-        resul.push(Object.assign({'folio': (folio+cont)},item,{'suma':sumaAcumulada}))
+        resul.push(Object.assign({'folio': (folio+cont)},item,{'suma':sumaAcumulada},{'tienda': tienda}))
         
-    })    
-        
+    })            
         sumaAcumulada = 0        
     return(resul)
-
 }
 
-const creacionDeNotas= (remisiones, fecha) =>{
-    let iva = 0, ieps = 0, tasa0 = 0, cont = 0
-    let folio = 1  
+const crearListaFolios= (remisiones, fecha, tienda) =>{
+    let iva = 0, ieps = 0, tasa0 = 0, cont = 0    
     let getDay = fecha[8]+fecha[9]
     let getMounth = fecha[5]+fecha[6]
     let getYear = fecha[0]+fecha[1]+fecha[2]+fecha[3]
     let fechaCompuesta = getDay+'-'+getMounth+'-'+getYear
+    let folioAnterior = remisiones[0].folio
+    
 
     let resul = [{
-        'folio' : folio,
-        'cliente' : 'cliente No.'+(folio+cont),
+        'folio' : remisiones[0].folio,
+        'cliente' : 'cliente No.'+cont,
         'direccion' : 'centro',                           
         'fecha' : fechaCompuesta,
         'tasas': { 'tasa0' : tasa0,
                     'tasa16': iva,
                     'tasa8': ieps
                     },
-        'total': (tasa0+iva+ieps)
+        'total': (tasa0+iva+ieps),
+        'tienda': tienda
         }]
        
-    while (remisiones.length > cont ) {  
-        
-               
-        
-        if (folio === remisiones[cont].folio) { // cambio de folio 
+    remisiones.forEach(item => {                
+        if (folioAnterior === item.folio) { // cambio de folio            
             //el total es variables, lo toma al azar la app, se tiene que obtener las 3 tasas
-            if (remisiones[cont].tasa === 16) iva += remisiones[cont].total
-            if (remisiones[cont].tasa === 8) ieps += remisiones[cont].total
-            if (remisiones[cont].tasa === 0) tasa0 += remisiones[cont].total
+            if (item.tasa === 16) iva += item.total
+            if (item.tasa === 8) ieps += item.total
+            if (item.tasa === 0) tasa0 += item.total
 
-            resul[folio-1].tasas = { 'tasa0' : tasa0, 'tasa16': iva,'tasa8': ieps}            
-            resul[folio-1].total = (tasa0+iva+ieps)
+            resul[cont].tasas = { 'tasa0' : tasa0, 'tasa16': iva,'tasa8': ieps}            
+            resul[cont].total = (tasa0+iva+ieps)
             
         }
-        else{
-            folio = remisiones[cont].folio 
+        else{         
 
             iva = 0
             ieps = 0
             tasa0 = 0            
 
-            if (remisiones[cont].tasa === 16) iva = remisiones[cont].total
-            if (remisiones[cont].tasa === 8) ieps = remisiones[cont].total
-            if (remisiones[cont].tasa === 0) tasa0 = remisiones[cont].total
+            if (item.tasa === 16) iva = item.total
+            if (item.tasa === 8) ieps = item.total
+            if (item.tasa === 0) tasa0 = item.total
 
             resul =[
                 ...resul,{
-                'folio' : folio,
-                'cliente' : 'cliente No.'+(folio+cont),
+                'folio' : item.folio,
+                'cliente' : 'cliente No.'+item.folio,
                 'direccion' : 'centro',                           
                 'fecha' : fechaCompuesta,
                 'tasas': { 'tasa0' : tasa0,
                             'tasa16': iva,
                             'tasa8': ieps
                             },
-                'total': (tasa0+iva+ieps)
+                'total': (tasa0+iva+ieps),
+                'tienda': tienda
                 }
             ] 
-
-            
+            cont++ //lo incremento para folios nuevos            
+            folioAnterior = item.folio
         }
-        cont++               
-    }
+                      
+    })
     return(resul)
 }
 
-export const obtenerNotas = (datos, productos, empaques) =>{
+export const obtenerNotas = (datos, productos, empaques,folio) =>{
+    console.log(datos)
     let total = parseFloat(datos.total)
     let iva = parseFloat(datos.iva)
     let ieps = parseFloat(datos.ieps)
     let notas = parseInt(datos.notas)
     let fecha = (datos.fecha)
-    let excedente = parseInt(datos.excedente)// por cuanto puede pasarse el total de cada nota
+    let tienda = datos.tienda
+    let excedente = parseInt(datos.excedente)// por cuanto puede pasarse el total de cada nota    
+    
+
     let produc = [...productos]
     let total_por_nota = total/notas
     let productos0 = produc.filter((x) => (x.ieps === '0' && x.iva === '0')) 
@@ -150,9 +150,11 @@ export const obtenerNotas = (datos, productos, empaques) =>{
     let unionDeTasa = [...tasa0.resul, ...tasa16.resul,...tasa8.resul].sort(()=>Math.random() - 0.5) 
 
     //creo todas las remisiones
-    let remisiones = insertarProductos(unionDeTasa,total_por_nota,1) 
+    let remisiones = crearRemisiones(unionDeTasa,total_por_nota,folio, tienda) 
+    
     //creo la lista de remisiones en base a las remisiones
-    let listaRemisiones = creacionDeNotas(remisiones,fecha)
+    let listaRemisiones = crearListaFolios(remisiones,fecha, tienda)
+    
 
     return {'listaRemisiones':listaRemisiones, 'remisiones':remisiones}
 
