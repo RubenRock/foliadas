@@ -47,7 +47,7 @@ const crearRemisiones = (productos,total_por_nota,folio, tienda) =>{
             sumaAcumulada = 0
         }
         sumaAcumulada += item.total
-        resul.push(Object.assign({'folio': (folio+cont)},item,{'suma':sumaAcumulada},{'tienda': tienda}))
+        resul.push(Object.assign({'folio': (parseInt(folio)+cont)},item,{'suma':sumaAcumulada},{'tienda': tienda}))
         
     })            
         sumaAcumulada = 0        
@@ -118,6 +118,8 @@ const crearListaFolios= (remisiones, fecha, tienda) =>{
     })
     return(resul)
 }
+
+
 
 export const obtenerNotas = (datos, productos, empaques,folio) =>{
     console.log(datos)

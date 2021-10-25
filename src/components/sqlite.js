@@ -1,8 +1,8 @@
 export const crearTablas = () =>{
     var db = openDatabase('db_foliadas', '1.0', 'Foliadas', 2 * 1024 * 1024);
     db.transaction(function (tx) {
-      tx.executeSql('CREATE TABLE IF NOT EXISTS lista_folios (folio integer primary key,cliente text, direccion text, fecha text, tasa0 text, tasa16 text, tasa8 text, total text,tienda text)');      
-      tx.executeSql('CREATE TABLE IF NOT EXISTS remisiones (folio integer ,cantidad text, producto text, empaque, text, precio text, total text, tasa text, tienda text)');      
+      tx.executeSql('CREATE TABLE IF NOT EXISTS lista_folios (folio integer,cliente text, direccion text, fecha text, tasa0 text, tasa16 text, tasa8 text, total text,tienda text)');      
+      tx.executeSql('CREATE TABLE IF NOT EXISTS remisiones (folio integer ,cantidad text, producto text, empaque text, precio text, total text, tasa text, tienda text)');      
     },(e)=> console.log(e.message),
     ()=> console.log('proceso correcto'));
 }
@@ -50,6 +50,38 @@ export const folioMax =  (tienda) => new Promise((resolve, reject) =>{
           })
         })       
   })
+
+
+  export const reimprimir =  (tienda,fecha) => new Promise((resolve, reject) =>{
+    let listaRemision =[], remisiones=[]  
+    var db = openDatabase('db_foliadas', '1.0', 'Foliadas', 2 * 1024 * 1024);
+    db.transaction(
+        tx => {               
+            tx.executeSql('select * from lista_folios where tienda = ? and fecha = ? ',[tienda, fecha],(x,res)=>{
+                let index = 0
+                while (index < res.rows.length) {
+                    listaRemision = [...listaRemision,res.rows.item(index)]
+                    tx.executeSql('select * from remisiones where tienda = ? and folio = ? ',[tienda, res.rows.item(index).folio],(x,res)=>{
+                        let index = 0
+                        while (index < res.rows.length) {
+                            remisiones = [...remisiones,res.rows.item(index)]
+                            index++                             
+                            }
+                        })
+                    index++                                  
+                }                
+            });
+            
+            })
+            //resolve no espera que termine el while por eso le doy tiempo para resolver la funcion
+            setTimeout(() => {                
+                if (remisiones.length){                    
+                    resolve({'listaRemision':listaRemision, 'remisiones':remisiones})
+                }
+                else
+                    resolve(0)                
+            }, 500);
+    })
 
   export const borrarTablas = () =>{
     var db = openDatabase('db_foliadas', '1.0', 'Foliadas', 2 * 1024 * 1024);

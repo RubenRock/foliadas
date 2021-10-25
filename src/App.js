@@ -4,6 +4,7 @@ import home_img from './img/home.svg'
 import report_img from './img/report.svg'
 import * as ObtenerNotas from './components/obtenerNotas'
 import * as Sqlite from './components/sqlite'
+import { Reimprimir, Imprimir } from './components/reimprimir'
 
 import './App.css';
 
@@ -13,25 +14,46 @@ function App() {
   const [empaques, setEmpaques] = useState([])
   const [listaRemision_Creada, setlistaRemision_Creada] = useState([])
   const [remisiones_Creadas, setRemisiones_Creadas] = useState([])  
+  const [reimprimirListaRemision, setReimprimirListaRemision] = useState([])
+  const [reimprimirRemisiones, setRemprimirRemisiones] = useState([])  
   const [imprimir, setImprimir] = useState(false)
+  const [reimprimir, setReimprimir] = useState(false)
   const [folio, setFolio] = useState(0)
+  const [modificarFolio, setModificarFolio] = useState(false)
   
   useEffect(() =>{
-      leerDatos()
-   
+      leerDatos()   
   },[])
 
   const regresar = () => {
     setlistaRemision_Creada([])
     setRemisiones_Creadas([])
     setImprimir(false)
+    setReimprimir(false)
+    setFolio(0)
+  }
+
+  const reimprimirNotas = () =>{    
+    let fe = datosCapturados.fecha
+    //2021/10/15
+    let ordernaFecha = fe[8]+fe[9]+'-'+fe[5]+ fe[6]+'-'+fe[0]+ fe[1]+ fe[2]+ fe[3] 
+
+    Sqlite.reimprimir(datosCapturados.tienda,ordernaFecha).then(e =>{        
+      if (e === 0) alert('No hay datos para mostrar')    
+      else{
+        setReimprimirListaRemision(e.listaRemision)
+        setRemprimirRemisiones(e.remisiones)
+        setReimprimir(true) 
+      }
+    })
+        
   }
 
   const leerFolio = async(tienda)=>{    
     setFolio(await Sqlite.folioMax(tienda))    
   }   
 
-  const guardarFoliadas = () =>{        
+  const guardarFoliadas = () =>{       
    
       setImprimir(true)
       Sqlite.crearTablas()
@@ -99,6 +121,11 @@ function App() {
 
   const pantalla_principal = 
     <>
+            <div class="topnav">
+              <a >Home</a>
+              <a onClick={() => reimprimirNotas()}>Reimprimir</a>              
+            </div>
+
             <div >      
               <img src={logoGASM} className='logo-GASM'  alt="logo" />        
               <p className='texto_cabecera'> Foliadas </p>
@@ -128,8 +155,14 @@ function App() {
                       </select>
 
                       <div className='fila' style={{alignItems:'center'}}>
-                        <input className='caja_texto_tienda' style={{width: '120px'}} value ={folio} onChange={e => setFolio(e.target.value)}/>
-                        <p className='texto'>ultimo folio</p>
+                      {modificarFolio ? //desabilito el folio si es mayor a 0
+                          <input type='number' className='caja_texto_tienda' style={{width: '120px'}} value ={folio} 
+                          onChange={e => setFolio(e.target.value)}/>
+                       : 
+                          <input type='number' className='caja_texto_tienda' style={{width: '120px'}} value ={folio} readOnly
+                          onChange={e => setFolio(e.target.value)}/>}
+                        
+                        <p className='texto' onClick={() => setModificarFolio(true)}>ultimo folio </p>
                       </div>
                       
                     </div>
@@ -342,10 +375,15 @@ function App() {
         :
           <>
             {/* para imprimir quito la pantalla principal */}           
-            { !imprimir ? 
+            { !imprimir && !reimprimir ? 
                 pantalla_principal 
               :               
-                mostrarListaRemisiones().resul 
+                null
+            }
+
+            { imprimir ?
+            mostrarListaRemisiones().resul 
+            : null
             }
 
             {/* el boton de imprimir aparece si hay remisiones creadas */}
@@ -369,13 +407,19 @@ function App() {
             :
                 null
             }
+
+            {reimprimir?              
+              <Imprimir datosCapturados = {datosCapturados} listaRemision={reimprimirListaRemision} remisiones={reimprimirRemisiones} regresar={regresar} />
+            :
+              null
+            }
             
-         {/*    {<button className='boton' 
+            {/*  {<button className='boton' 
                   onClick={() => Sqlite.borrarTablas()} 
                   onMouseEnter={(e) => changeBack(e)}
                   onMouseLeave={(e) => changeBack(e)}                  
                 >borrar tablas</button>
-            } */}
+            }  */}
             
         </>
   
