@@ -2,14 +2,16 @@ import {useEffect, useState} from 'react'
 import logoGASM from './img/Logo_GASM.JPG'
 import home_img from './img/home.svg'
 import report_img from './img/report.svg'
+import printer from './img/printer.svg'
+
 import * as ObtenerNotas from './components/obtenerNotas'
 import * as Sqlite from './components/sqlite'
-import { Reimprimir, Imprimir } from './components/reimprimir'
+import { Reimprimir } from './components/reimprimir'
 
 import './App.css';
 
 function App() {
-  const [datosCapturados,setDatosCapturados] = useState ({'tienda':'nada','total':'0','iva':'0','ieps':'0','notas':'0','excedente':'', 'fecha':''})
+  const [datosCapturados,setDatosCapturados] = useState ({'tienda':'nada','total':'','iva':'','ieps':'','notas':'','excedente':'', 'fecha':''})
   const [productos, setProductos] = useState([])
   const [empaques, setEmpaques] = useState([])
   const [listaRemision_Creada, setlistaRemision_Creada] = useState([])
@@ -18,6 +20,7 @@ function App() {
   const [reimprimirRemisiones, setRemprimirRemisiones] = useState([])  
   const [imprimir, setImprimir] = useState(false)
   const [reimprimir, setReimprimir] = useState(false)
+  const [mostrarUno, setMostrarUno] = useState(false) //no mostrar la lista de reimpresion individual de notas
   const [folio, setFolio] = useState(0)
   const [modificarFolio, setModificarFolio] = useState(false)
   
@@ -25,12 +28,35 @@ function App() {
       leerDatos()   
   },[])
 
-  const regresar = () => {
+  const limpiar = () =>{
+    setDatosCapturados({'tienda':'nada','total':'','iva':'','ieps':'','notas':'','excedente':'', 'fecha':''})
     setlistaRemision_Creada([])
     setRemisiones_Creadas([])
+    setReimprimirListaRemision([])
+    setRemprimirRemisiones([])
+    setImprimir(false)
+    setReimprimir(false)
+    setMostrarUno(false)
+    setFolio(0)
+    setModificarFolio(false)    
+  }
+
+  const regresar = () => { 
+    limpiar()
+  }
+
+  const regresarReimpresion = () =>{
+    let fe = datosCapturados.fecha    
+    let ordernaFecha = fe[8]+fe[9]+'-'+fe[5]+ fe[6]+'-'+fe[0]+ fe[1]+ fe[2]+ fe[3] 
+    Sqlite.reimprimir(datosCapturados.tienda,ordernaFecha).then(e =>{              
+        setReimprimirListaRemision(e.listaRemision)
+        setRemprimirRemisiones(e.remisiones)              
+    })
+
     setImprimir(false)
     setReimprimir(false)
     setFolio(0)
+    setModificarFolio(false)
   }
 
   const reimprimirNotas = () =>{    
@@ -43,11 +69,46 @@ function App() {
       else{
         setReimprimirListaRemision(e.listaRemision)
         setRemprimirRemisiones(e.remisiones)
+        setMostrarUno(false) //no mostrar la lista de reimpresion individual de notas
         setReimprimir(true) 
       }
     })
         
   }
+
+  const listaReimprimirUno = () =>{        
+    let fe = datosCapturados.fecha
+    //2021/10/15
+    let ordernaFecha = fe[8]+fe[9]+'-'+fe[5]+ fe[6]+'-'+fe[0]+ fe[1]+ fe[2]+ fe[3] 
+
+    Sqlite.reimprimir(datosCapturados.tienda,ordernaFecha).then(e =>{              
+      if (e === 0) {
+        setReimprimirListaRemision([])
+        setRemprimirRemisiones([])   
+        alert('No hay datos para mostrar')    
+      }
+      else{
+        setReimprimirListaRemision(e.listaRemision)
+        setRemprimirRemisiones(e.remisiones)        
+        setMostrarUno(true)
+      }
+    })
+        
+  }
+
+  const reimprimirUno = (tienda, folio) =>{    
+    Sqlite.reimprimirUno(tienda,folio).then(e =>{        
+      if (e === 0) alert('No hay datos para mostrar')    
+      else{
+        setReimprimirListaRemision(e.listaRemision)
+        setRemprimirRemisiones(e.remisiones)
+        setReimprimir(true) 
+      }
+    })
+        
+  }
+
+
 
   const leerFolio = async(tienda)=>{    
     setFolio(await Sqlite.folioMax(tienda))    
@@ -122,8 +183,9 @@ function App() {
   const pantalla_principal = 
     <>
             <div class="topnav">
-              <a >Home</a>
-              <a onClick={() => reimprimirNotas()}>Reimprimir</a>              
+              <a onClick={() => limpiar()}>Limpiar</a>
+              <a onClick={() => reimprimirNotas()}>Reimprimir todo</a>              
+              <a onClick={() => listaReimprimirUno()}>Reimprimir uno</a>              
             </div>
 
             <div >      
@@ -138,15 +200,17 @@ function App() {
                   <div className='mandar_abajo '>
                     <div className='columna'>
                       <div style={{display:'flex',justifyContent:'flex-end'}}>
-                        <input type="date"  className='caja_texto_tienda' style={{width: '220px'}}
+                        <input type="date"  className='caja_texto_tienda' style={{width: '220px'}} value={datosCapturados.fecha}
                           onChange={(e) => setDatosCapturados({...datosCapturados,'fecha':e.target.value})}/>
                       </div>
                       
-                      <select className='caja_texto_tienda' placeholder='Tienda' type="search" 
+                      <select className='caja_texto_tienda' placeholder='Tienda' type="search" value={datosCapturados.tienda}
                         onChange={(e) => {
                           setDatosCapturados({...datosCapturados,'tienda':e.target.value})
-                          leerFolio(e.target.value)
+                          leerFolio(e.target.value)                         
                         }}
+
+                        
                       >
                         <option value="nada">Seleccione la tienda</option>
                         <option value="matriz">Matriz</option>
@@ -173,24 +237,24 @@ function App() {
                   <img src={report_img} className='logo-report'  alt="report" />       
                 </div>
                 <div className='columna'>
-                  <input type='number' placeholder='Total' className='caja_texto' style={{width:'299px',height:'30px'}} 
+                  <input type='number' placeholder='Total' className='caja_texto' style={{width:'299px',height:'30px'}} value={datosCapturados.total} 
                       onChange={(e) => setDatosCapturados({...datosCapturados,'total':e.target.value})
                     } 
                   />
-                  <input type='number' placeholder='IVA' className='caja_texto' style={{width:'299px',height:'30px'}} 
+                  <input type='number' placeholder='IVA' className='caja_texto' style={{width:'299px',height:'30px'}}  value={datosCapturados.iva}
                       onChange={(e) => setDatosCapturados({...datosCapturados,'iva':e.target.value})
                     } 
                   />
-                  <input type='number' placeholder='IEPS'className='caja_texto' style={{width:'299px',height:'30px'}} 
+                  <input type='number' placeholder='IEPS'className='caja_texto' style={{width:'299px',height:'30px'}} value={datosCapturados.ieps}
                       onChange={(e) => setDatosCapturados({...datosCapturados,'ieps':e.target.value})
                     } 
                   />
                   
-                  <input type='number' placeholder='Numero de notas'className='caja_texto' style={{width:'299px',height:'30px'}} 
+                  <input type='number' placeholder='Numero de notas'className='caja_texto' style={{width:'299px',height:'30px'}} value={datosCapturados.notas}
                       onChange={(e) => setDatosCapturados({...datosCapturados,'notas':e.target.value})
                     } 
                   />
-                  <input type='number' placeholder='Excedente permitido' className='caja_texto' style={{width:'299px',height:'30px'}} 
+                  <input type='number' placeholder='Excedente permitido' className='caja_texto' style={{width:'299px',height:'30px'}} value={datosCapturados.excedente}
                       onChange={(e) => setDatosCapturados({...datosCapturados,'excedente':e.target.value})
                     } 
                   />
@@ -329,11 +393,11 @@ function App() {
     if (total<1 ||  datosCapturados.total.length === 0)
       error=error + 'necesitas total \n'
 
-    if (iva>total)
-      error=error + 'Iva supera a la cantidad total \n'
+    if (iva>total ||  datosCapturados.iva.length === 0)
+      error=error + 'Error con el IVA \n'
 
-    if (ieps>total)
-      error=error + 'Iesp supera a la cantidad total \n'
+    if (ieps>total ||  datosCapturados.ieps.length === 0)
+      error=error + 'Error con el IEPS \n'
 
     if ((iva + ieps)>total)
       error=error + 'La suma de IVA e IEPS supera a la cantidad total \n'
@@ -351,6 +415,7 @@ function App() {
           const {listaRemisiones, remisiones} =ObtenerNotas.obtenerNotas(datosCapturados,productos,empaques,folio)          
           setlistaRemision_Creada(listaRemisiones)
           setRemisiones_Creadas(remisiones)
+          setMostrarUno(false) // oculta lista de reimpresion individual si esta visible
       }
 
   }
@@ -374,15 +439,32 @@ function App() {
           </div>
         :
           <>
-            {/* para imprimir quito la pantalla principal */}           
+            {/* para imprimir quito la pantalla principal */}                        
             { !imprimir && !reimprimir ? 
-                pantalla_principal 
+                <>
+                {pantalla_principal}
+                
+                {/* lista de remisiones para elegir cual reimprimir individualmente */}
+                {mostrarUno ?
+                  reimprimirListaRemision.map( (item, index) => 
+                    <p key = {index} className='lista_impresion'>
+                      {item.folio} - {item.cliente} - $ {parseFloat(item.total).toFixed(2)} 
+                      <img src={printer} style={{height:'25px', width:'25px',marginLeft:'20px'}}  
+                        alt="printer" onClick={() => reimprimirUno(item.tienda,item.folio)}
+                      /> 
+                    </p>
+                  )
+                :
+                  null
+                 }
+                </>
               :               
                 null
             }
 
-            { imprimir ?
-            mostrarListaRemisiones().resul 
+            { imprimir ? //lista de notas creadas para imprimir
+              mostrarListaRemisiones().resul 
+              
             : null
             }
 
@@ -409,7 +491,7 @@ function App() {
             }
 
             {reimprimir?              
-              <Imprimir datosCapturados = {datosCapturados} listaRemision={reimprimirListaRemision} remisiones={reimprimirRemisiones} regresar={regresar} />
+              <Reimprimir datosCapturados = {datosCapturados} listaRemision={reimprimirListaRemision} remisiones={reimprimirRemisiones} regresar={regresarReimpresion} />
             :
               null
             }

@@ -8,21 +8,19 @@ export const crearTablas = () =>{
 }
 
 export const insertarDatos = (lista_remision, remisiones) =>{
-    var db = openDatabase('db_foliadas', '1.0', 'Foliadas', 2 * 1024 * 1024);
-
-    console.log('comenzamos a guardar')
+    var db = openDatabase('db_foliadas', '1.0', 'Foliadas', 2 * 1024 * 1024);   
 
     lista_remision.forEach( item => {
         db.transaction(function (tx) {
             tx.executeSql('INSERT INTO lista_folios (folio, cliente,direccion, fecha, tasa0, tasa16, tasa8, total, tienda ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',[item.folio, item.cliente,item.direccion, item.fecha, item.tasas.tasa0, item.tasas.tasa16, item.tasas.tasa8, item.total, item.tienda]);
-        },e => console.log(e.message),
+        },e => alert(e.message),
         () => console.log('guardado de lista de remisiones perfecto'))
     })
     
     remisiones.forEach(item =>{
         db.transaction(function (tx) {
             tx.executeSql('INSERT INTO remisiones (folio, cantidad, producto, empaque, precio, total, tasa, tienda) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',[item.folio, item.cantidad,item.producto, item.empaque, item.precio, item.total, item.tasa, item.tienda]);
-        },e => console.log(e.message),
+        },e => alert(e.message),
         () => console.log('guardado de remisiones perfecto'))
     })
 }
@@ -82,6 +80,37 @@ export const folioMax =  (tienda) => new Promise((resolve, reject) =>{
                     resolve(0)                
             }, 500);
     })
+
+    export const reimprimirUno =  (tienda,folio) => new Promise((resolve, reject) =>{
+        let listaRemision =[], remisiones=[]  
+        var db = openDatabase('db_foliadas', '1.0', 'Foliadas', 2 * 1024 * 1024);
+        db.transaction(
+            tx => {               
+                tx.executeSql('select * from lista_folios where tienda = ? and folio = ? ',[tienda, folio],(x,res)=>{
+                    let index = 0
+                    while (index < res.rows.length) {
+                        listaRemision = [...listaRemision,res.rows.item(index)]
+                        tx.executeSql('select * from remisiones where tienda = ? and folio = ? ',[tienda, res.rows.item(index).folio],(x,res)=>{
+                            let index = 0
+                            while (index < res.rows.length) {
+                                remisiones = [...remisiones,res.rows.item(index)]
+                                index++                             
+                                }
+                            })
+                        index++                                  
+                    }                
+                });
+                
+                })
+                //resolve no espera que termine el while por eso le doy tiempo para resolver la funcion
+                setTimeout(() => {                
+                    if (remisiones.length){                    
+                        resolve({'listaRemision':listaRemision, 'remisiones':remisiones})
+                    }
+                    else
+                        resolve(0)                
+                }, 500);
+        })
 
   export const borrarTablas = () =>{
     var db = openDatabase('db_foliadas', '1.0', 'Foliadas', 2 * 1024 * 1024);

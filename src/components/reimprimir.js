@@ -61,7 +61,7 @@ const changeBack = (e) =>{
   }  
 
 
-export const Imprimir = (props) =>{
+export const Reimprimir = (props) =>{
     
     let total=0, iva = 0, ieps = 0
     let ancho_pantalla = '245px', letra_chica = '13px'
@@ -100,7 +100,7 @@ export const Imprimir = (props) =>{
                                                             (item2.folio === item.folio) ?
                                                                 <div key={index2}>
                                                                     <div className='fila' >
-                                                                        <p className='remisiones_cantidad'> {item2.cantidad} </p>
+                                                                        <p className='remisiones_cantidad'> {parseInt(item2.cantidad)} </p>
                                                                         <p > {item2.empaque} {item2.producto} </p>                                                                        
                                                                     </div>
                                                                     <div className='fila' style={{width:ancho_pantalla,display:'flex',justifyContent:'space-between'}} >                                                                        

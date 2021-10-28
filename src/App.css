@@ -245,3 +245,22 @@ p,html{
   background-color: #6C63FF;
   color: white;
 }
+
+.lista_impresion{
+  background-color: rgba(6, 4, 31, 0.81);
+  color: white;
+  padding: 14px 16px;
+  font-family: Aclonica;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  width: 80%;
+  border-radius: 19px;
+}
+
+.lista_impresion:hover{  
+  cursor: pointer;
+}
+
+a:hover{
+  cursor:pointer;
+}

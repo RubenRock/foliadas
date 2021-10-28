@@ -37,7 +37,7 @@ function ObtenerProductos (total, productos, empaques,tasa,total_por_nota, exced
 }
 
 const crearRemisiones = (productos,total_por_nota,folio, tienda) =>{
-    console.log(tienda)
+    
     let sumaAcumulada = 0, cont= 1
     let resul = []    
     
@@ -122,7 +122,7 @@ const crearListaFolios= (remisiones, fecha, tienda) =>{
 
 
 export const obtenerNotas = (datos, productos, empaques,folio) =>{
-    console.log(datos)
+    
     let total = parseFloat(datos.total)
     let iva = parseFloat(datos.iva)
     let ieps = parseFloat(datos.ieps)
