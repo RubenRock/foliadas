@@ -132,7 +132,7 @@ export const obtenerNotas = (datos, productos, empaques,folio) =>{
     let excedente = parseInt(datos.excedente)// por cuanto puede pasarse el total de cada nota    
     
 
-    let produc = [...productos]
+    let produc = productos.filter( x => x.facturable ==='SI') //filtro los productos que si se pueden facturar
     let total_por_nota = total/notas
     let productos0 = produc.filter((x) => (x.ieps === '0' && x.iva === '0')) 
     let productosIVA = produc.filter((x) => (x.iva !== '0')) 

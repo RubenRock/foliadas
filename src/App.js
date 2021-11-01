@@ -373,7 +373,7 @@ function App() {
     </>
     
     //necesito regresar las notas creadas en resul
-    //y el desglose de los totales en totalm iva e ipes porque useState renderiza muchas veces y no funciono
+    //y el desglose de los totales en total iva e ipes porque useState renderiza muchas veces y no funciono
     return({resul:resul,total:total, iva:iva, ieps:ieps})                                          
   }
 
