@@ -89,7 +89,7 @@ export const Reimprimir = (props) =>{
                                                     { props.datosCapturados.tienda ==='mercado' ? cabecera_mercado(ancho_pantalla) : null}
                                                     { props.datosCapturados.tienda ==='lorena' ? cabecera_lorena(ancho_pantalla) : null}
                                                     
-                                                    <p className='lista_remision_cliente' style={{fontWeight:'bold'}}> {item.cliente} </p>
+                                                    <p className='lista_remision_cliente' style={{fontWeight:'bold',fontSize:'12px'}}> {item.cliente} </p>
                                                     <div style={{display:'flex',justifyContent:'space-around',fontSize:letra_chica}}>                                                        
                                                         <p className='lista_remision_fecha'> {item.fecha} </p>                                                         
                                                         <p className='lista_remision_folio'> FOLIO:  {item.folio} </p>                                                        
@@ -136,7 +136,9 @@ export const Reimprimir = (props) =>{
                                                         
                                                     </div>
                                                 </div>)
+                                                
                 }
+                
                  <p>.</p> 
                 <div>                 
                   <button className='boton' 

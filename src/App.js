@@ -14,6 +14,7 @@ function App() {
   const [datosCapturados,setDatosCapturados] = useState ({'tienda':'nada','total':'','iva':'','ieps':'','notas':'','excedente':'', 'fecha':''})
   const [productos, setProductos] = useState([])
   const [empaques, setEmpaques] = useState([])
+  const [clientes, setClientes] = useState([])
   const [listaRemision_Creada, setlistaRemision_Creada] = useState([])
   const [remisiones_Creadas, setRemisiones_Creadas] = useState([])  
   const [reimprimirListaRemision, setReimprimirListaRemision] = useState([])
@@ -22,11 +23,12 @@ function App() {
   const [reimprimir, setReimprimir] = useState(false)
   const [mostrarUno, setMostrarUno] = useState(false) //no mostrar la lista de reimpresion individual de notas
   const [folio, setFolio] = useState(0)
-  const [modificarFolio, setModificarFolio] = useState(false)
+  const [modificarFolio, setModificarFolio] = useState(false)  
   
   useEffect(() =>{
-      leerDatos()   
-  },[])
+      leerDatos()
+      
+  },[])  
 
   const limpiar = () =>{
     setDatosCapturados({'tienda':'nada','total':'','iva':'','ieps':'','notas':'','excedente':'', 'fecha':''})
@@ -277,6 +279,11 @@ function App() {
 
   const leerDatos = async () =>{
     setEmpaques([])  
+
+    let clientes = await fetch('https://vercel-api-eta.vercel.app/api/clientes')
+    let datos = await clientes.json()
+    setClientes(datos)    
+
     let response = await fetch('https://vercel-api-eta.vercel.app/api/inventario' )        
     let data = await response.json()           
     setProductos(data)
@@ -412,7 +419,7 @@ function App() {
       alert(error)
     else //despues de validar la informacion hacemos los calculos
       {
-          const {listaRemisiones, remisiones} =ObtenerNotas.obtenerNotas(datosCapturados,productos,empaques,folio)          
+          const {listaRemisiones, remisiones} =ObtenerNotas.obtenerNotas(datosCapturados,productos,empaques,folio,clientes)          
           setlistaRemision_Creada(listaRemisiones)
           setRemisiones_Creadas(remisiones)
           setMostrarUno(false) // oculta lista de reimpresion individual si esta visible
@@ -426,6 +433,26 @@ function App() {
     :
       e.target.style.background = 'blue'
 
+  }
+
+  const listaIndividual = () => {
+    let resul = ''
+    let total=0, iva = 0, ieps = 0
+    resul = reimprimirListaRemision.map( (item, index) => {
+      iva += parseFloat(item.tasa16)
+      ieps += parseFloat(item.tasa8 )
+      total += parseFloat(item.total)
+
+      return(<p key = {index} className='lista_impresion' onClick={() => reimprimirUno(item.tienda,item.folio)}>
+          {item.folio} - {item.cliente} - $ {parseFloat(item.total).toFixed(2)} 
+          <img src={printer} style={{height:'25px', width:'25px',marginLeft:'20px'}}  
+            alt="printer" 
+          /> 
+        </p>
+      )
+    })    
+   
+     return({'resul':resul,'total':total,'tasa0':(total-iva-ieps),'iva':iva,'ieps':ieps})
   }
 
   return (
@@ -445,15 +472,15 @@ function App() {
                 {pantalla_principal}
                 
                 {/* lista de remisiones para elegir cual reimprimir individualmente */}
-                {mostrarUno ?
-                  reimprimirListaRemision.map( (item, index) => 
-                    <p key = {index} className='lista_impresion'>
-                      {item.folio} - {item.cliente} - $ {parseFloat(item.total).toFixed(2)} 
-                      <img src={printer} style={{height:'25px', width:'25px',marginLeft:'20px'}}  
-                        alt="printer" onClick={() => reimprimirUno(item.tienda,item.folio)}
-                      /> 
-                    </p>
-                  )
+                {mostrarUno ?                    
+                <>
+                  <p className='texto'>Total: ${listaIndividual().total.toFixed(2)}</p>
+                  <p className='texto'>Tasa 0: ${listaIndividual().tasa0.toFixed(2)}</p>
+                  <p className='texto'>IVA: ${listaIndividual().iva.toFixed(2)}</p>
+                  <p className='texto'>IEPS: ${listaIndividual().ieps.toFixed(2)}</p>                      
+                  
+                  {listaIndividual().resul}
+                </>
                 :
                   null
                  }
