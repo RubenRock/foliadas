@@ -30,6 +30,14 @@ function App() {
       
   },[])  
 
+  const ordernarFecha = (fecha) =>{    
+    const mes=['enero','febrero','marzo','abril','mayo','junio','julio','agosto', 'septiembre','octubre', 'noviembre','diciembre']
+    //2021/10/15    
+    let indexMes = fecha[5]+ fecha[6]
+    let orden = fecha[8]+fecha[9]+'-'+mes[parseInt(indexMes)-1]+'-'+fecha[0]+ fecha[1]+ fecha[2]+ fecha[3]
+    return(orden)
+  }
+
   const limpiar = () =>{
     setDatosCapturados({'tienda':'nada','total':'','iva':'','ieps':'','notas':'','excedente':'', 'fecha':''})
     setlistaRemision_Creada([])
@@ -82,6 +90,7 @@ function App() {
   const listaReimprimirUno = () =>{        
     setlistaRemision_Creada('')
     let fe = datosCapturados.fecha
+    ordernarFecha(fe)
     //2021/10/15
     let ordernaFecha = fe[8]+fe[9]+'-'+fe[5]+ fe[6]+'-'+fe[0]+ fe[1]+ fe[2]+ fe[3] 
 
@@ -295,9 +304,8 @@ function App() {
     setEmpaques(data) 
   }
 
-  const mostrarListaRemisiones = () =>{
-    console.log(remisiones_Creadas)
-    let total=0, iva = 0, ieps = 0
+  const mostrarListaRemisiones = () =>{    
+    let total=0, iva = 0, ieps = 0, folioini=0, foliofin=0
     let ancho_pantalla = '245px', letra_chica = '13px'
     let resul=
     <>
@@ -313,6 +321,7 @@ function App() {
                 {listaRemision_Creada.map((item, index) =>  <div key={index}>                                                  
                                                     
                                                     <div style={{display:'none'}}> {/* muestra en pantalla los acumuladores */}
+                                                        {index === 0 ? folioini = item.folio : foliofin = item.folio}
                                                         { iva += item.tasas.tasa16}
                                                         { ieps += item.tasas.tasa8 }
                                                         { total += item.total}
@@ -335,7 +344,7 @@ function App() {
                                                                 <div key={index2}>
                                                                     <div className='fila' >
                                                                         <p className='remisiones_cantidad'> {item2.cantidad} </p>
-                                                                        <p > {item2.empaque} {item2.producto} </p>                                                                        
+                                                                        <p> {item2.empaque} {item2.producto} </p>                                                                        
                                                                     </div>
                                                                     <div className='fila' style={{width:ancho_pantalla,display:'flex',justifyContent:'space-between'}} >                                                                        
                                                                         <p style={{marginLeft:'40px', fontSize:letra_chica}} >Tasa: {item2.tasa}% </p>            
@@ -371,14 +380,21 @@ function App() {
                                                     </div>
                                                 </div>)
                 }
-                 <p>.</p> 
+                <p > ** {datosCapturados.tienda} ** </p>
+                <p >{ordernarFecha(datosCapturados.fecha)}</p>
+                <p >Folios: {folioini} - {foliofin}</p>
+                <p >Total: {convertirAPesos(total)}</p>                  
+                <p >-- Tasa 0: {convertirAPesos(total-iva-ieps)}</p>
+                <p >-- IVA:    {convertirAPesos(iva)}</p>
+                <p >-- IEPS:   {convertirAPesos(ieps)}</p>
+
                 <div>                 
                   <button className='boton' 
                     onClick={() => regresar()} 
                     onMouseEnter={(e) => changeBack(e)}
                     onMouseLeave={(e) => changeBack(e)}                  
                   >regresar</button>                     
-                </div>
+                </div>              
       </div>      
     </>
     
@@ -429,9 +445,9 @@ function App() {
         //2021/10/15
         let ordernaFecha = fe[8]+fe[9]+'-'+fe[5]+ fe[6]+'-'+fe[0]+ fe[1]+ fe[2]+ fe[3] 
     
-        Sqlite.reimprimir(datosCapturados.tienda,ordernaFecha).then(e =>{              
+        Sqlite.reimprimir(datosCapturados.tienda,ordernaFecha).then(e =>{                        
           if (e === 0) {
-            const {listaRemisiones, remisiones} =ObtenerNotas.obtenerNotas(datosCapturados,productos,empaques,folio,clientes)          
+            const {listaRemisiones, remisiones} =ObtenerNotas.obtenerNotas(datosCapturados,productos,empaques,folio,clientes)                      
             setlistaRemision_Creada(listaRemisiones)
             setRemisiones_Creadas(remisiones)            
           }
@@ -492,13 +508,13 @@ function App() {
                 
                 {/* lista de remisiones para elegir cual reimprimir individualmente */}
                 {mostrarUno ?                    
-                <>
-                  <p className='texto'> {datosCapturados.tienda} - {datosCapturados.fecha}</p>
+                <>                  
+                  <p className='texto'> {datosCapturados.tienda} {ordernarFecha(datosCapturados.fecha)}</p>
                   <p className='texto'>Folios: {listaIndividual().folioini} - {listaIndividual().foliofin}</p>
-                  <p className='texto'>Total: ${listaIndividual().total.toFixed(2)}</p>
-                  <p className='texto'>Tasa 0: ${listaIndividual().tasa0.toFixed(2)}</p>
-                  <p className='texto'>IVA: ${listaIndividual().iva.toFixed(2)}</p>
-                  <p className='texto'>IEPS: ${listaIndividual().ieps.toFixed(2)}</p>                      
+                  <p className='texto'>Total: {convertirAPesos(listaIndividual().total)}</p>                  
+                  <p className='texto'>-- Tasa 0: {convertirAPesos(listaIndividual().tasa0)}</p>
+                  <p className='texto'>-- IVA: {convertirAPesos(listaIndividual().iva)}</p>
+                  <p className='texto'>-- IEPS: {convertirAPesos(listaIndividual().ieps)}</p>                      
                   
                   {listaIndividual().resul}
                 </>

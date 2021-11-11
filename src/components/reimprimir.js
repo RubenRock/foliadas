@@ -60,10 +60,22 @@ const changeBack = (e) =>{
     )
   }  
 
+  const convertirAPesos = (cantidad) =>{
+    let pesos = cantidad    
+    return(pesos.toLocaleString('es-MX', {style: 'currency',currency: 'MXN', minimumFractionDigits: 2}))
+  }
+
+  const ordernarFecha = (fecha) =>{    
+    const mes=['enero','febrero','marzo','abril','mayo','junio','julio','agosto', 'septiembre','octubre', 'noviembre','diciembre']
+    //2021/10/15    
+    let indexMes = fecha[5]+ fecha[6]
+    let orden = fecha[8]+fecha[9]+'-'+mes[parseInt(indexMes)-1]+'-'+fecha[0]+ fecha[1]+ fecha[2]+ fecha[3]
+    return(orden)
+  }
 
 export const Reimprimir = (props) =>{
     
-    let total=0, iva = 0, ieps = 0
+    let total=0, iva = 0, ieps = 0, folioini= 0, foliofin= 0
     let ancho_pantalla = '245px', letra_chica = '13px'
     let resul=
     <>
@@ -79,9 +91,10 @@ export const Reimprimir = (props) =>{
                 {props.listaRemision.map((item, index) =>  <div key={index}>                                                  
                                                     
                                                     <div style={{display:'none'}}> {/* muestra en pantalla los acumuladores */}
-                                                        { iva += item.tasa16}
-                                                        { ieps += item.tasa8 }
-                                                        { total += item.total}
+                                                        {index === 0 ? folioini = item.folio : foliofin = item.folio}
+                                                        { iva += parseFloat(item.tasa16)}
+                                                        { ieps += parseFloat(item.tasa8) }
+                                                        { total += parseFloat(item.total)}
                                                     </div>
                                                     
                                                     {/* verifico que tienda es para poner su encabezado */}
@@ -137,9 +150,14 @@ export const Reimprimir = (props) =>{
                                                     </div>
                                                 </div>)
                                                 
-                }
-                
-                 <p>.</p> 
+                } 
+                <p > ** {props.datosCapturados.tienda} ** </p>
+                <p >{ordernarFecha(props.datosCapturados.fecha)}</p>
+                <p >Folios: {folioini} - {foliofin}</p>
+                <p >Total: {convertirAPesos(total)}</p>                  
+                <p >-- Tasa 0: {convertirAPesos(total-iva-ieps)}</p>
+                <p >-- IVA:    {convertirAPesos(iva)}</p>
+                <p >-- IEPS:   {convertirAPesos(ieps)}</p>
                 <div>                 
                   <button className='boton' 
                     onClick={() => props.regresar()} 
