@@ -62,6 +62,7 @@ function App() {
   }
 
   const reimprimirNotas = () =>{    
+    setlistaRemision_Creada('')
     let fe = datosCapturados.fecha
     //2021/10/15
     let ordernaFecha = fe[8]+fe[9]+'-'+fe[5]+ fe[6]+'-'+fe[0]+ fe[1]+ fe[2]+ fe[3] 
@@ -79,6 +80,7 @@ function App() {
   }
 
   const listaReimprimirUno = () =>{        
+    setlistaRemision_Creada('')
     let fe = datosCapturados.fecha
     //2021/10/15
     let ordernaFecha = fe[8]+fe[9]+'-'+fe[5]+ fe[6]+'-'+fe[0]+ fe[1]+ fe[2]+ fe[3] 
@@ -294,6 +296,7 @@ function App() {
   }
 
   const mostrarListaRemisiones = () =>{
+    console.log(remisiones_Creadas)
     let total=0, iva = 0, ieps = 0
     let ancho_pantalla = '245px', letra_chica = '13px'
     let resul=
@@ -391,6 +394,8 @@ function App() {
     let ieps = parseFloat(datosCapturados.ieps)
     let notas = parseInt(datosCapturados.notas)
 
+    setMostrarUno(false) // oculta lista de reimpresion individual si esta visible 
+   
     if (datosCapturados.fecha.length === 0)
       error ='necesitas seleccionar fecha \n'
 
@@ -419,10 +424,22 @@ function App() {
       alert(error)
     else //despues de validar la informacion hacemos los calculos
       {
-          const {listaRemisiones, remisiones} =ObtenerNotas.obtenerNotas(datosCapturados,productos,empaques,folio,clientes)          
-          setlistaRemision_Creada(listaRemisiones)
-          setRemisiones_Creadas(remisiones)
-          setMostrarUno(false) // oculta lista de reimpresion individual si esta visible
+        //Verifico que no se haya hecho foliadas ese dia  
+        let fe = datosCapturados.fecha
+        //2021/10/15
+        let ordernaFecha = fe[8]+fe[9]+'-'+fe[5]+ fe[6]+'-'+fe[0]+ fe[1]+ fe[2]+ fe[3] 
+    
+        Sqlite.reimprimir(datosCapturados.tienda,ordernaFecha).then(e =>{              
+          if (e === 0) {
+            const {listaRemisiones, remisiones} =ObtenerNotas.obtenerNotas(datosCapturados,productos,empaques,folio,clientes)          
+            setlistaRemision_Creada(listaRemisiones)
+            setRemisiones_Creadas(remisiones)            
+          }
+          else{
+            alert('Ya se hizo foliadas de este dia')            
+          }
+        })
+         
       }
 
   }
@@ -436,12 +453,14 @@ function App() {
   }
 
   const listaIndividual = () => {
-    let resul = ''
+    let resul = '', folioini= '', foliofin=''
     let total=0, iva = 0, ieps = 0
     resul = reimprimirListaRemision.map( (item, index) => {
+      if (index === 0) folioini = item.folio //folio inicial
       iva += parseFloat(item.tasa16)
       ieps += parseFloat(item.tasa8 )
       total += parseFloat(item.total)
+      foliofin = item.folio
 
       return(<p key = {index} className='lista_impresion' onClick={() => reimprimirUno(item.tienda,item.folio)}>
           {item.folio} - {item.cliente} - $ {parseFloat(item.total).toFixed(2)} 
@@ -452,7 +471,7 @@ function App() {
       )
     })    
    
-     return({'resul':resul,'total':total,'tasa0':(total-iva-ieps),'iva':iva,'ieps':ieps})
+     return({'resul':resul,'total':total,'tasa0':(total-iva-ieps),'iva':iva,'ieps':ieps,'folioini':folioini,'foliofin':foliofin})
   }
 
   return (
@@ -474,6 +493,8 @@ function App() {
                 {/* lista de remisiones para elegir cual reimprimir individualmente */}
                 {mostrarUno ?                    
                 <>
+                  <p className='texto'> {datosCapturados.tienda} - {datosCapturados.fecha}</p>
+                  <p className='texto'>Folios: {listaIndividual().folioini} - {listaIndividual().foliofin}</p>
                   <p className='texto'>Total: ${listaIndividual().total.toFixed(2)}</p>
                   <p className='texto'>Tasa 0: ${listaIndividual().tasa0.toFixed(2)}</p>
                   <p className='texto'>IVA: ${listaIndividual().iva.toFixed(2)}</p>
@@ -517,7 +538,7 @@ function App() {
                 null
             }
 
-            {reimprimir?              
+            {reimprimir?   //nota individual para reimprimir           
               <Reimprimir datosCapturados = {datosCapturados} listaRemision={reimprimirListaRemision} remisiones={reimprimirRemisiones} regresar={regresarReimpresion} />
             :
               null
